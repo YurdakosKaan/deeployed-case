@@ -30,9 +30,14 @@ jobs:
         with:
           project_id: ${{ env.PROJECT_ID }}
 
-      - name: Build container with Cloud Build
+      - name: Configure Docker auth for Artifact Registry
         run: |
-          gcloud builds submit --config cloudbuild.yaml .
+          gcloud auth configure-docker gcr.io --quiet
+
+      - name: Build and push container image
+        run: |
+          docker build -t gcr.io/$PROJECT_ID/$SERVICE .
+          docker push gcr.io/$PROJECT_ID/$SERVICE
 
       - name: Deploy to Cloud Run
         run: |
