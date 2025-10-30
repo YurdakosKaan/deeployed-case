@@ -5,8 +5,10 @@ WORKDIR /usr/src/app
 # ---- Dependencies Stage ----
 FROM base as deps
 RUN mkdir -p /temp/prod_deps
-COPY package.json bun.lockb /temp/prod_deps/
-RUN cd /temp/prod_deps && bun install --production
+# Copy Bun lockfile (this repo uses bun.lock)
+COPY package.json bun.lock /temp/prod_deps/
+# Use --no-save to avoid modifying the lockfile in CI (CI sets frozen by default)
+RUN cd /temp/prod_deps && bun install --production --no-save
 
 # ---- Build Stage ----
 FROM base as build
