@@ -8,6 +8,8 @@ env:
   PROJECT_ID: deeployed-case
   REGION: us-central1
   SERVICE: deeployed-webhook-server
+  REGISTRY_HOST: us-central1-docker.pkg.dev
+  REPOSITORY: webhooks
 
 jobs:
   deploy:
@@ -32,17 +34,19 @@ jobs:
 
       - name: Configure Docker auth for Artifact Registry
         run: |
-          gcloud auth configure-docker gcr.io --quiet
+          gcloud auth configure-docker $REGISTRY_HOST --quiet
 
       - name: Build and push container image
         run: |
-          docker build -t gcr.io/$PROJECT_ID/$SERVICE .
-          docker push gcr.io/$PROJECT_ID/$SERVICE
+          IMAGE_URI=$REGISTRY_HOST/$PROJECT_ID/$REPOSITORY/$SERVICE:latest
+          echo "IMAGE_URI=$IMAGE_URI" >> $GITHUB_ENV
+          docker build -t $IMAGE_URI .
+          docker push $IMAGE_URI
 
       - name: Deploy to Cloud Run
         run: |
           gcloud run deploy $SERVICE \
-            --image gcr.io/$PROJECT_ID/$SERVICE \
+            --image $IMAGE_URI \
             --region $REGION \
             --platform managed \
             --allow-unauthenticated \
