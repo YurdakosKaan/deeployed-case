@@ -1,0 +1,37 @@
+import OpenAI from "openai";
+
+if (!process.env.OPENAI_API_KEY) {
+  throw new Error("OPENAI_API_KEY is not set");
+}
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
+export async function generatePRDescription(diff: string): Promise<string> {
+  const prompt = `
+    Analyze the following PR diff and generate a concise, professional description.
+    The description should include a summary of the changes, the key modifications,
+    and the potential impact.
+
+    Diff:
+    ${diff}
+  `;
+
+  try {
+    const response = await openai.chat.completions.create({
+      model: "gpt-3.5-turbo",
+      messages: [{ role: "user", content: prompt }],
+      max_tokens: 256,
+      temperature: 0.7,
+    });
+    
+    const description = response.choices[0].message?.content?.trim();
+    return description || "Could not generate a description.";
+    
+  } catch (error) {
+    console.error("Error generating PR description from OpenAI:", error);
+    return "Error generating description.";
+  }
+}
+
