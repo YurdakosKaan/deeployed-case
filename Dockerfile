@@ -16,7 +16,7 @@ COPY . .
 RUN bun run build
 
 # ---- Production Stage ----
-FROM gcr.io/distroless/nodejs:18
+FROM node:18-alpine
 WORKDIR /usr/src/app
 COPY --from=build /usr/src/app/dist ./dist
 COPY --from=deps /temp/prod_deps/node_modules ./node_modules
