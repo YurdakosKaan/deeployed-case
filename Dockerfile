@@ -21,6 +21,6 @@ WORKDIR /usr/src/app
 COPY --from=build /usr/src/app/dist ./dist
 COPY --from=deps /temp/prod_deps/node_modules ./node_modules
 
-EXPOSE 3000
+EXPOSE 8080
 CMD ["dist/index.js"]
 
