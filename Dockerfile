@@ -3,12 +3,11 @@ FROM oven/bun:1.0 as base
 WORKDIR /usr/src/app
 
 # ---- Dependencies Stage ----
-FROM base as deps
-RUN mkdir -p /temp/prod_deps
-# Copy only package manifest; lockfile is optional in CI
-COPY package.json /temp/prod_deps/
-# Install deps without treating CI as frozen-lockfile (no bun.lock in repo)
-RUN cd /temp/prod_deps && CI= bun install --production --no-save
+FROM node:18-alpine as deps
+WORKDIR /temp/prod_deps
+COPY package.json ./
+# Install all deps with npm (avoids bun frozen lockfile behavior in CI)
+RUN npm install --legacy-peer-deps
 
 # ---- Build Stage ----
 FROM base as build
