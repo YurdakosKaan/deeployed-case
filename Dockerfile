@@ -7,8 +7,8 @@ FROM base as deps
 RUN mkdir -p /temp/prod_deps
 # Copy only package manifest; lockfile is optional in CI
 COPY package.json /temp/prod_deps/
-# Use --no-save to avoid modifying the lockfile in CI
-RUN cd /temp/prod_deps && bun install --production --no-save
+# Install deps without treating CI as frozen-lockfile (no bun.lock in repo)
+RUN cd /temp/prod_deps && CI= bun install --production --no-save
 
 # ---- Build Stage ----
 FROM base as build
