@@ -4,13 +4,19 @@ import { handlePullRequestOpened } from "../services/github.service";
 
 export const webhookRouter = Router();
 
-if (!process.env.GITHUB_WEBHOOK_SECRET) {
-  throw new Error("GITHUB_WEBHOOK_SECRET is not set");
-}
+let webhooksInstance: Webhooks | null = null;
 
-const webhooks = new Webhooks({
-  secret: process.env.GITHUB_WEBHOOK_SECRET,
-});
+function getWebhooks(): Webhooks {
+  if (!process.env.GITHUB_WEBHOOK_SECRET) {
+    throw new Error("GITHUB_WEBHOOK_SECRET is not set");
+  }
+  if (!webhooksInstance) {
+    webhooksInstance = new Webhooks({
+      secret: process.env.GITHUB_WEBHOOK_SECRET,
+    });
+  }
+  return webhooksInstance;
+}
 
 // Simple in-memory idempotency guard for webhook redeliveries
 // Stores recent X-GitHub-Delivery IDs to avoid duplicate processing
@@ -34,7 +40,7 @@ webhookRouter.post("/", async (req, res) => {
 
   const payload = JSON.stringify(req.body);
 
-  const isValid = await webhooks.verify(payload, signature);
+  const isValid = await getWebhooks().verify(payload, signature);
   if (!isValid) {
     return res.status(401).send("Invalid signature");
   }

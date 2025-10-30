@@ -2,14 +2,20 @@ import { App } from "octokit";
 import { generatePRDescription } from "./openai.service";
 import { PullRequestOpenedPayload } from "../types";
 
-if (!process.env.GITHUB_APP_ID || !process.env.GITHUB_APP_PRIVATE_KEY) {
-  throw new Error("GitHub App credentials are not set");
-}
+let appInstance: App | null = null;
 
-const app = new App({
-  appId: process.env.GITHUB_APP_ID,
-  privateKey: process.env.GITHUB_APP_PRIVATE_KEY,
-});
+function getApp(): App {
+  if (!process.env.GITHUB_APP_ID || !process.env.GITHUB_APP_PRIVATE_KEY) {
+    throw new Error("GitHub App credentials are not set");
+  }
+  if (!appInstance) {
+    appInstance = new App({
+      appId: process.env.GITHUB_APP_ID,
+      privateKey: process.env.GITHUB_APP_PRIVATE_KEY,
+    });
+  }
+  return appInstance;
+}
 
 export async function handlePullRequestOpened(payload: PullRequestOpenedPayload) {
   const { repository, pull_request, installation } = payload;
@@ -17,7 +23,7 @@ export async function handlePullRequestOpened(payload: PullRequestOpenedPayload)
     throw new Error("Installation ID is missing from the payload");
   }
 
-  const octokit = await app.getInstallationOctokit(installation.id);
+  const octokit = await getApp().getInstallationOctokit(installation.id);
 
   const owner = repository.owner.login;
   const repo = repository.name;
