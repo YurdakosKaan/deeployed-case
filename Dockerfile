@@ -6,14 +6,15 @@ WORKDIR /usr/src/app
 FROM node:18-alpine as deps
 WORKDIR /temp/prod_deps
 COPY package.json ./
-# Install all deps with npm (avoids bun frozen lockfile behavior in CI)
+# Install all deps (including dev deps for TypeScript build) with npm
 RUN npm install --legacy-peer-deps
 
 # ---- Build Stage ----
-FROM base as build
+FROM node:18-alpine as build
+WORKDIR /usr/src/app
 COPY --from=deps /temp/prod_deps/node_modules ./node_modules
 COPY . .
-RUN bun run build
+RUN npm run build
 
 # ---- Production Stage ----
 FROM node:18-alpine
