@@ -20,6 +20,7 @@ FROM node:18-alpine
 WORKDIR /usr/src/app
 COPY --from=build /usr/src/app/dist ./dist
 COPY --from=deps /temp/prod_deps/node_modules ./node_modules
+COPY package.json ./
 
 EXPOSE 8080
 CMD ["node", "dist/index.js"]
