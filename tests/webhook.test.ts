@@ -4,13 +4,22 @@ import express from "express";
 import request from "supertest";
 import { webhookRouter } from "@/routes/webhook";
 import * as githubService from "@/services/github.service";
+import { createHmac } from "crypto";
+
+// Helper to generate valid webhook signatures for testing
+function generateSignature(payload: string, secret: string): string {
+  const hmac = createHmac("sha256", secret);
+  hmac.update(payload);
+  return `sha256=${hmac.digest("hex")}`;
+}
 
 describe("Webhook Router", () => {
   const app = express();
   app.use(express.json());
   app.use("/webhook", webhookRouter);
 
-  process.env.GITHUB_WEBHOOK_SECRET = "test-secret";
+  const TEST_SECRET = "test-secret";
+  process.env.GITHUB_WEBHOOK_SECRET = TEST_SECRET;
 
   test("should return 401 for requests with no signature", async () => {
     const response = await request(app).post("/webhook").send({});
@@ -18,16 +27,17 @@ describe("Webhook Router", () => {
   });
   
   test("should return 200 for a valid ping event", async () => {
-    // This signature is not valid, but we are not testing verification here.
-    // We are testing that the ping event is correctly handled.
+    const payload = JSON.stringify({});
+    const signature = generateSignature(payload, TEST_SECRET);
+    
     const response = await request(app)
       .post("/webhook")
       .set("x-github-event", "ping")
-      .set("x-hub-signature-256", "sha256=a5b9d3d3b6a9c6e5e8f4b0f6b3a2e1d1e4f4b3a2e1d1e4f4b3a2e1d1e4f4b3a2")
+      .set("x-hub-signature-256", signature)
       .send({});
     expect(response.status).toBe(200);
     expect(response.text).toBe("pong");
-});
+  });
 
   test("should return 202 and process a valid pull_request.opened event", async () => {
     const handleMock = spyOn(githubService, 'handlePullRequestOpened').mockResolvedValue(undefined);
@@ -39,12 +49,13 @@ describe("Webhook Router", () => {
       installation: { id: 123 }
     };
     
-    // Webhook verification is complex to mock, so we bypass it for this unit test
-    // by mocking the service function that is called after verification.
+    const payloadStr = JSON.stringify(payload);
+    const signature = generateSignature(payloadStr, TEST_SECRET);
+    
     const response = await request(app)
       .post("/webhook")
       .set("x-github-event", "pull_request")
-      .set("x-hub-signature-256", "sha256=test") 
+      .set("x-hub-signature-256", signature) 
       .send(payload);
 
     expect(response.status).toBe(202);
