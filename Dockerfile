@@ -6,8 +6,10 @@ WORKDIR /usr/src/app
 FROM base as deps
 WORKDIR /usr/src/app
 COPY package.json bun.lock ./
-# Install dependencies with Bun (use --frozen-lockfile=false in CI to allow updates if needed)
-RUN bun install --frozen-lockfile
+# Install dependencies with Bun
+# Note: Using bun install without --frozen-lockfile to allow platform-specific resolution in CI
+# The lockfile is still used as a reference but allows necessary adjustments for the build environment
+RUN bun install
 
 # ---- Build Stage ----
 FROM base as build
