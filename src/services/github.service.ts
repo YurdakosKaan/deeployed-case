@@ -1,6 +1,6 @@
 import { App } from "octokit";
-import { generatePRDescription } from "./openai.service";
-import { PullRequestOpenedPayload } from "../types";
+import { generatePRDescription } from "./openai.service.js";
+import { PullRequestOpenedPayload } from "../types/index.js";
 
 let appInstance: App | null = null;
 

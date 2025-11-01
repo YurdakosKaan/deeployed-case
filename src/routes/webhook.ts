@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { Webhooks } from "@octokit/webhooks";
-import { handlePullRequestOpened } from "../services/github.service";
+import { handlePullRequestOpened } from "../services/github.service.js";
 
 export const webhookRouter = Router();
 
