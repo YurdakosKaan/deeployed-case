@@ -2,6 +2,7 @@
   "name": "deeployed-webhook-server",
   "version": "1.0.0",
   "description": "A webhook server that automatically generates PR descriptions using OpenAI.",
+  "type": "module",
   "main": "dist/index.js",
   "scripts": {
     "build": "bunx tsc",
