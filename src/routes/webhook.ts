@@ -35,17 +35,20 @@ function rememberDelivery(deliveryId: string) {
 webhookRouter.post("/", async (req, res) => {
   const signature = req.headers["x-hub-signature-256"] as string;
   if (!signature) {
+    console.error("Webhook: No signature header found");
     return res.status(401).send("No signature found");
   }
 
   const payload = JSON.stringify(req.body);
+  const event = req.headers["x-github-event"] as string;
+  console.log(`Webhook received: event=${event}, hasSignature=${!!signature}`);
 
   const isValid = await getWebhooks().verify(payload, signature);
   if (!isValid) {
+    console.error("Webhook: Invalid signature - secret may not match");
     return res.status(401).send("Invalid signature");
   }
   
-  const event = req.headers["x-github-event"] as string;
   const deliveryId = req.headers["x-github-delivery"] as string | undefined;
 
   if (deliveryId && recentlyProcessedDeliveryIds.has(deliveryId)) {
